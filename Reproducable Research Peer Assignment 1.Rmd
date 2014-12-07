@@ -1,0 +1,77 @@
+---
+title: "Reproducable Research Peer Assignment 1"
+author: "Roel Hogervorst"
+date: "Tuesday, December 02, 2014"
+output: html_document
+---
+Reproducable Research Peer Assignment 1
+============================================
+
+##Loading and preprocessing the data
+*First load the data,*
+*Set data column in Date format.*
+```{r Dataloading}
+data<-read.csv(unz("activity.zip", "activity.csv"))
+#set date to Date format.
+data$date<- as.Date(as.character(data$date), format="%Y-%m-%d")
+
+```
+##what is the toal number of steps taken per day? (W/o missing values)
+1. Make a histogram of the total number of steps taken each day
+
+1. Calculate and report the mean and median total number of steps taken per day
+
+
+```{r}
+#sum values per day and make a histogram.
+sums<-tapply(data$steps,data$date,sum, na.rm=TRUE)
+hist(sums, xlab="steps", main="steps per day")
+#calculate mean and median of total number of steps taken per day.
+mean(sums)
+median(sums)
+```
+
+##What is the average daily activity pattern?
+1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```{r}
+avsteps<-tapply(data$steps,data$interval,mean, na.rm=TRUE)
+plot(avsteps, xlab="interval", main="avarage steps per day")
+```
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+```{r}
+which.max(avsteps)
+avsteps["835"]
+avsteps["104"]
+```
+*It seems that the which.max function also counts NA as max. *
+*5min segment 835 has the maximum number of avarage steps a day.*
+
+##Imputing missing values
+Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
+
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
+```{r}
+sum(is.na(data$steps))
+```
+
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+*I will use a mean for every 5 minute interval imputation. This is of course a horrible way to impute missing data but let's use it anyway.*
+
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r}
+library(plyr)
+data2<-ddply(data, .(interval), transform, steps=ifelse(is.na(steps),mean(steps, na.rm=TRUE), steps))
+```
+
+
+4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+##Are there differences in activity patterns between weekdays and weekends?
+
+1. For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
+
+2. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+3. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
